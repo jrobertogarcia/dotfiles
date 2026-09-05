@@ -99,6 +99,7 @@ success "Zoxide ready: $(zoxide --version 2>/dev/null || echo 'installed')"
 if ! has_cmd atuin; then
   info "Installing Atuin..."
   curl --proto '=https' --tlsv1.2 -LsSf https://setup.atuin.sh | sh
+  [[ -f "$HOME/.atuin/bin/atuin" ]] && cp -f "$HOME/.atuin/bin/atuin" "$BIN_DIR/"
 fi
 success "Atuin ready: $(atuin --version 2>/dev/null || echo 'installed')"
 

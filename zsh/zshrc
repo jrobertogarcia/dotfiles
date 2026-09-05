@@ -5,7 +5,7 @@
 [ -f ~/.shell_env ] && . ~/.shell_env
 
 # Ensure user binaries take precedence
-export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$HOME/.gemini/antigravity-cli/bin:$PATH"
+export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$HOME/.atuin/bin:$HOME/.gemini/antigravity-cli/bin:$PATH"
 
 # ==============================================================================
 # 2. Antidote & fpath
