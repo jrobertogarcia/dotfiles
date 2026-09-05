@@ -1,0 +1,10 @@
+# Completion enhancements
+zsh-users/zsh-completions path:src kind:fpath
+Aloxaf/fzf-tab
+
+# Oh My Zsh curated snippets
+ohmyzsh/ohmyzsh path:plugins/git
+
+# Interactive UX (Loaded in strict order: suggestions -> highlighting)
+zsh-users/zsh-autosuggestions
+zdharma-continuum/fast-syntax-highlighting
