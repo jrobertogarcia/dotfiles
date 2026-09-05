@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Cross-Platform Dotfiles Bootstrap Installer
+# Dotfiles Bootstrap Installer
 # Supports: Linux (Fedora, Debian/Ubuntu, Arch) and macOS
 # ==============================================================================
 set -euo pipefail
@@ -25,7 +25,7 @@ success() { echo -e "${GREEN}${BOLD}✓${NC} $*"; }
 warn()    { echo -e "${YELLOW}${BOLD}!${NC} $*"; }
 error()   { echo -e "${RED}${BOLD}✗${NC} $*"; exit 1; }
 
-info "Starting dotfiles installation from: $DOTFILES_DIR"
+info "Starting installation from: $DOTFILES_DIR"
 
 # ------------------------------------------------------------------------------
 # 1. System & Architecture Detection
@@ -77,25 +77,25 @@ has_cmd git  || error "git is required. Please install git on this system."
 has_cmd curl || error "curl is required. Please install curl on this system."
 
 # ------------------------------------------------------------------------------
-# 3. Modern Standalone CLI Tools Installation
+# 3. CLI Tools Installation
 # ------------------------------------------------------------------------------
-info "Installing / verifying modern CLI tools in $BIN_DIR..."
+info "Checking CLI tools in $BIN_DIR..."
 
 # 3.1 Starship Prompt
 if ! has_cmd starship; then
   info "Installing Starship..."
   curl -sS https://starship.rs/install.sh | sh -s -- -y --bin-dir "$BIN_DIR"
 fi
-success "Starship prompt ready: $(starship --version | head -n 1)"
+success "Starship ready: $(starship --version | head -n 1)"
 
-# 3.2 Zoxide (Smart CD)
+# 3.2 Zoxide
 if ! has_cmd zoxide; then
   info "Installing Zoxide..."
   curl -sSfL https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | sh
 fi
 success "Zoxide ready: $(zoxide --version 2>/dev/null || echo 'installed')"
 
-# 3.3 Atuin (SQLite History)
+# 3.3 Atuin
 if ! has_cmd atuin; then
   info "Installing Atuin..."
   curl --proto '=https' --tlsv1.2 -LsSf https://setup.atuin.sh | sh
@@ -119,7 +119,7 @@ trap cleanup EXIT
 if [[ "$OS" == "Linux" && "$ARCH" == "x86_64" ]]; then
   # Delta
   if ! has_cmd delta; then
-    info "Downloading Git-Delta binary..."
+    info "Downloading Delta binary..."
     curl -sL https://github.com/dandavison/delta/releases/download/0.19.2/delta-0.19.2-x86_64-unknown-linux-gnu.tar.gz | tar -xz -C "$TMP_INSTALL"
     mv -f "$TMP_INSTALL"/delta-*/delta "$BIN_DIR/"
     chmod +x "$BIN_DIR/delta"
@@ -153,18 +153,18 @@ fi
 # ------------------------------------------------------------------------------
 # 4. Antidote Plugin Manager Setup
 # ------------------------------------------------------------------------------
-info "Setting up Antidote plugin manager..."
+info "Setting up Antidote..."
 if [[ ! -d "$HOME/.antidote" ]]; then
   git clone --depth=1 https://github.com/mattmc3/antidote.git "$HOME/.antidote"
   success "Cloned Antidote to ~/.antidote"
 else
-  success "Antidote already present at ~/.antidote"
+  success "Antidote present at ~/.antidote"
 fi
 
 # ------------------------------------------------------------------------------
 # 5. Backup & Symlink Dotfiles
 # ------------------------------------------------------------------------------
-info "Establishing configuration symlinks..."
+info "Setting up symlinks..."
 
 backup_and_link() {
   local src="$1"
@@ -172,10 +172,9 @@ backup_and_link() {
 
   mkdir -p "$(dirname "$dst")"
 
-  # If destination exists and is not a symlink to src, back it up
   if [[ -e "$dst" && ! -L "$dst" ]]; then
     local backup="${dst}.pre-dotfiles.bak"
-    warn "Backing up existing $dst to $backup"
+    warn "Backing up $dst to $backup"
     mv "$dst" "$backup"
   fi
 
@@ -194,10 +193,10 @@ backup_and_link "$DOTFILES_DIR/config/starship.toml" "$HOME/.config/starship.tom
 # ------------------------------------------------------------------------------
 info "Compiling Antidote plugins..."
 zsh -c "source \$HOME/.antidote/antidote.zsh && antidote bundle < \$HOME/.zsh_plugins.txt > \$HOME/.zsh_plugins.zsh"
-success "Antidote bundle compiled to ~/.zsh_plugins.zsh"
+success "Compiled ~/.zsh_plugins.zsh"
 
 if has_cmd delta; then
-  info "Configuring Git Delta pager..."
+  info "Configuring Git Delta..."
   git config --global core.pager "delta"
   git config --global interactive.diffFilter "delta --color-only"
   git config --global delta.navigate true
@@ -211,23 +210,20 @@ fi
 # 7. Verification & Default Shell
 # ------------------------------------------------------------------------------
 info "Validating Zsh syntax..."
-zsh -n "$HOME/.zshrc" && success "Syntax validation passed"
+zsh -n "$HOME/.zshrc" && success "Syntax check passed"
 
-# Set default shell if not already zsh
 CURRENT_SHELL="$(getent passwd "$USER" 2>/dev/null | cut -d: -f7 || echo "$SHELL")"
 if [[ "$CURRENT_SHELL" != *"zsh"* ]]; then
   ZSH_PATH="$(command -v zsh)"
-  info "Default shell is currently: $CURRENT_SHELL"
+  info "Default shell: $CURRENT_SHELL"
   if has_cmd chsh; then
-    info "Changing default login shell to $ZSH_PATH..."
-    chsh -s "$ZSH_PATH" || warn "Could not change shell automatically; please run: chsh -s $ZSH_PATH"
+    info "Changing default shell to $ZSH_PATH..."
+    chsh -s "$ZSH_PATH" || warn "Could not set shell automatically. Run: chsh -s $ZSH_PATH"
   fi
 fi
 
 echo ""
-echo -e "${GREEN}${BOLD}======================================================${NC}"
-echo -e "${GREEN}${BOLD} 🎉 Dotfiles setup completed successfully!${NC}"
-echo -e "${GREEN}${BOLD}======================================================${NC}"
-echo -e "To activate your environment now, run: ${BOLD}exec zsh${NC}"
-echo -e "To open the cheat sheet at any time, run: ${BOLD}zsh-help${NC}"
+echo -e "${GREEN}${BOLD}Setup completed.${NC}"
+echo -e "Start a new session: ${BOLD}exec zsh${NC}"
+echo -e "Open reference: ${BOLD}zsh-help${NC}"
 echo ""

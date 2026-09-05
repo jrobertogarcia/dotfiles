@@ -1,9 +1,9 @@
 # ==============================================================================
-# MODULAR DEVELOPER ALIASES (~/.config/zsh/aliases.zsh)
+# Shell Aliases (~/.config/zsh/aliases.zsh)
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
-# 1. PYTHON PRODUCTIVITY SUITE ('p' family)
+# 1. Python ('p' family)
 # ------------------------------------------------------------------------------
 alias p="python3"
 alias py="python3"
@@ -18,14 +18,14 @@ alias pyclean='find . -type f -name "*.py[co]" -delete -o -type d -name "__pycac
 alias server="python3 -m http.server"
 
 # ------------------------------------------------------------------------------
-# 2. JAVASCRIPT / PACKAGE MANAGERS (Minimal Fallbacks)
+# 2. Node / Package Managers
 # ------------------------------------------------------------------------------
 alias pn="pnpm"
 alias nr="npm run"
 alias ni="npm install"
 
 # ------------------------------------------------------------------------------
-# 3. RUST & GO ('c' family)
+# 3. Rust & Go ('c' family)
 # ------------------------------------------------------------------------------
 alias c="cargo"
 alias cb="cargo build"
@@ -35,7 +35,7 @@ alias cchk="cargo check"   # Avoids colliding with /usr/bin/cc
 alias gtt="go tool task"
 
 # ------------------------------------------------------------------------------
-# 4. GIT ERGONOMICS ('g' family)
+# 4. Git ('g' family)
 # ------------------------------------------------------------------------------
 alias g="git"
 alias gs="git status -sb"
@@ -57,7 +57,7 @@ alias gst="git stash"
 alias gstp="git stash pop"
 
 # ------------------------------------------------------------------------------
-# 5. DOCKER & CONTAINERS ('d' family)
+# 5. Docker ('d' family)
 # ------------------------------------------------------------------------------
 alias d="docker"
 alias dc="docker compose"
@@ -69,7 +69,7 @@ alias dcl="docker compose logs -f --tail=100"
 alias dclean="docker system prune -f"
 
 # ------------------------------------------------------------------------------
-# 6. NAVIGATION & MODERN CLI REPLACEMENTS
+# 6. Navigation & Core Utilities
 # ------------------------------------------------------------------------------
 alias ..="cd .."
 alias ...="cd ../.."
@@ -99,12 +99,12 @@ alias cp="cp -iv"
 alias mv="mv -iv"
 
 # ------------------------------------------------------------------------------
-# 7. SYSTEM INSPECTION & SHELL MANAGEMENT
+# 7. System & Shell
 # ------------------------------------------------------------------------------
 alias ports="ss -tulanp"
 alias myip="ip -br -c addr"
 alias path='echo $PATH | tr ":" "\n"'
-alias reload="source ~/.zshrc && echo 'ZSH configuration reloaded!'"
+alias reload="source ~/.zshrc && echo 'Reloaded ~/.zshrc'"
 alias zshrc='${EDITOR:-nano} ~/.zshrc'
 alias aliases='${EDITOR:-nano} ~/.config/zsh/aliases.zsh'
 alias zsh-help="bat --style=plain ~/.config/zsh/CHEATSHEET.md"

@@ -1,44 +1,35 @@
-# ⚡ Personal Dotfiles & Modern Zsh Environment
+# Dotfiles
 
-A fast, modular, polyglot development terminal environment powered by **Antidote**, **Starship**, **fzf-tab**, **Atuin**, and modern Rust/Go CLI utilities.
+Zsh configuration and CLI environment for Linux and macOS. Uses Antidote for plugin management, Starship for prompts, fzf-tab for completion, and Atuin for history.
 
 ---
 
-## 🚀 Quickstart (Install on Any Machine)
+## Installation
 
-On any new machine (Fedora, Ubuntu/Debian, Arch, macOS, or WSL):
+Run on any target machine:
 
 ```bash
 git clone https://github.com/jrobertogarcia/dotfiles.git ~/dotfiles
 cd ~/dotfiles && ./install.sh
-```
-
-Then start a fresh session:
-```bash
 exec zsh
 ```
 
-### What `install.sh` Does Automatically
-1. **Installs core prerequisites**: `zsh`, `git`, `curl`.
-2. **Installs modern CLI tools** (with automatic zero-root fallback into `~/.local/bin` if sudo is unavailable):
-   - **Prompt**: `starship`
-   - **Smart Navigation**: `zoxide`
-   - **History Engine**: `atuin`
-   - **Fuzzy Finder**: `fzf`
-   - **CLI Upgrades**: `bat` (cat), `eza` (ls), `delta` (git diff), `fd` (find).
-3. **Sets up Antidote v2.0** for static Zsh plugin bundling.
-4. **Safely backs up** any pre-existing config files on the target machine.
-5. **Establishes symlinks** from `~/dotfiles/` to `$HOME`.
-6. **Compiles static plugin caches** and sets `zsh` as default shell.
+### What `install.sh` Does
+1. Checks for prerequisites (`zsh`, `git`, `curl`).
+2. Installs CLI utilities (`starship`, `zoxide`, `atuin`, `eza`, `bat`, `delta`, `fd`, `fzf`). If `sudo` is not available, downloads precompiled binaries to `~/.local/bin`.
+3. Clones Antidote to `~/.antidote`.
+4. Backs up existing configuration files to `*.pre-dotfiles.bak`.
+5. Symlinks configuration files from `~/dotfiles/` to `$HOME`.
+6. Compiles Antidote plugins and configures Git to use Delta for diffs.
 
 ---
 
-## 📂 Repository Structure
+## Structure
 
 ```text
 ~/dotfiles/
-├── install.sh                  # One-command idempotent installer
-├── README.md                   # This documentation
+├── install.sh                  # Bootstrap installer
+├── README.md                   # Documentation
 ├── zsh/
 │   ├── zshrc                   # Symlinked to ~/.zshrc
 │   ├── zsh_plugins.txt         # Symlinked to ~/.zsh_plugins.txt
@@ -50,31 +41,30 @@ exec zsh
 
 ---
 
-## 🔄 Daily Workflow: Syncing Changes Across Machines
+## Workflow
 
-Because all files in `$HOME` are **symbolic links** pointing into `~/dotfiles`, any changes you make are immediately reflected in your Git repository.
+All configuration files in `$HOME` are symlinks pointing to `~/dotfiles`.
 
-### Pushing changes from this machine:
+### Pushing changes:
 ```bash
 cd ~/dotfiles
-git status
 git add .
-git commit -m "feat: add new alias"
+git commit -m "feat: add alias"
 git push
 ```
 
-### Pulling updates on another machine:
+### Pulling changes on another machine:
 ```bash
 cd ~/dotfiles
 git pull
-reload   # Instantly reloads the shell and re-sources all aliases
+reload
 ```
 
 ---
 
-## 📖 Quick Reference Cheat Sheet
+## Quick Reference
 
-You can view the full interactive cheat sheet directly from your terminal at any time:
+View the reference guide in the terminal:
 
 ```bash
 zsh-help
@@ -82,11 +72,11 @@ zsh-help
 cheatsheet
 ```
 
-### Highlights
-- **Python**: `p` (runs `python3`), `pm <module>`, `pip`, `venv` (activates `.venv`), `mkvenv`.
-- **Git**: `g`, `gs` (concise status), `gpl` (rebase pull), `gback` (toggle previous branch), `gd` (Delta diffs).
-- **Navigation**: `z <folder>` (smart jump), `..` / `...` (tree climbing), `<Tab>` (fzf-tab with live `eza` & `bat` previews).
-- **History**: `Ctrl+R` (Atuin full TUI database search), `Up`/`Down` (prefix history search).
-- **Docker**: `d`, `dc`, `dps` (clean table), `dcu`, `dcd`, `dclean`.
+### Summary
+- **Python**: `p` (`python3`), `pm <module>`, `pip`, `venv` (activates `.venv`), `mkvenv`.
+- **Git**: `g`, `gs` (status), `gpl` (rebase pull), `gback` (previous branch), `gd` (Delta diffs).
+- **Navigation**: `z <folder>` (frecency jump), `..` / `...`, `<Tab>` (fzf-tab with file and directory previews).
+- **History**: `Ctrl+R` (Atuin SQLite search), `Up`/`Down` (prefix search).
+- **Docker**: `d`, `dc`, `dps` (table format), `dcu`, `dcd`, `dclean`.
 - **Rust/Go**: `c` (`cargo`), `cb`, `cr`, `ct`, `cchk`, `gtt`.
-- **Shell**: `reload` (re-source config without restarting terminal).
+- **Shell**: `reload` (re-sources `~/.zshrc`).

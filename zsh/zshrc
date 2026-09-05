@@ -1,22 +1,20 @@
 # ==============================================================================
-# 1. ENVIRONMENT & PATH INITIALIZATION
+# 1. Environment & PATH
 # ==============================================================================
-# Load shared environment (NVM, Go, Cargo, PNPM) first if it exists
+# Load shared environment (NVM, Go, Cargo, PNPM) first if present
 [ -f ~/.shell_env ] && . ~/.shell_env
 
-# Ensure user-level binaries take top priority over language version managers
+# Ensure user binaries take precedence
 export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$HOME/.gemini/antigravity-cli/bin:$PATH"
 
 # ==============================================================================
-# 2. ANTIDOTE PLUGIN COMPILATION & FPATH
+# 2. Antidote & fpath
 # ==============================================================================
-# Add completion definitions to fpath before compinit runs
 fpath=(
   ~/.cache/antidote/github.com/zsh-users/zsh-completions/src
   $fpath
 )
 
-# Source Antidote and re-bundle statically if manifest changed
 if [[ -f ~/.antidote/antidote.zsh ]]; then
   source ~/.antidote/antidote.zsh
   if [[ ! -f ~/.zsh_plugins.zsh || ~/.zsh_plugins.txt -nt ~/.zsh_plugins.zsh ]]; then
@@ -25,7 +23,7 @@ if [[ -f ~/.antidote/antidote.zsh ]]; then
 fi
 
 # ==============================================================================
-# 3. OPTIMIZED COMPLETION ENGINE (Cached 24hr Compinit)
+# 3. Completion Engine (Cached 24hr)
 # ==============================================================================
 autoload -Uz compinit
 typeset -i updated_at=$(date +'%j' -r ~/.zcompdump 2>/dev/null || echo 0)
@@ -35,29 +33,22 @@ else
   compinit -C -i
 fi
 
-# Load compiled plugins (fzf-tab must load after compinit, before suggestions/highlighting)
+# Load compiled plugins (fzf-tab loads after compinit, before highlighting)
 [[ -f ~/.zsh_plugins.zsh ]] && source ~/.zsh_plugins.zsh
 
 # ==============================================================================
-# 4. FZF-TAB CONFIGURATION (Interactive Completion UI with Previews)
+# 4. fzf-tab Configuration
 # ==============================================================================
-# Disable sort when completing `git checkout`
 zstyle ':completion:*:git-checkout:*' sort false
-# Set descriptions format to enable group support
 zstyle ':completion:*:descriptions' format '[%d]'
-# Set list-colors to enable filename coloring
 zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
-# Force zsh not to show the default completion menu
 zstyle ':completion:*' menu no
-# Preview directory contents with eza when completing cd
 zstyle ':fzf-tab:complete:cd:*' fzf-preview 'eza -1 --color=always $realpath'
-# Preview file content with bat when completing cat/bat/nvim/vim
 zstyle ':fzf-tab:complete:(cat|bat|vim|nvim):*' fzf-preview 'bat --style=numbers --color=always --line-range :100 $realpath'
-# Layout and appearance
 zstyle ':fzf-tab:*' fzf-flags --height=40% --layout=reverse
 
 # ==============================================================================
-# 5. SHELL HISTORY
+# 5. History
 # ==============================================================================
 HISTFILE=~/.zsh_history
 HISTSIZE=50000
@@ -72,19 +63,16 @@ setopt HIST_REDUCE_BLANKS
 setopt interactivecomments
 
 # ==============================================================================
-# 6. TOOL INTEGRATIONS (Starship, Zoxide, FZF, Atuin)
+# 6. Tool Integrations (Starship, Zoxide, FZF, Atuin)
 # ==============================================================================
-# Starship Prompt (guarded against dumb terminals)
 if [[ "$TERM" != "dumb" ]] && command -v starship >/dev/null 2>&1; then
   eval "$(starship init zsh)"
 fi
 
-# Zoxide (Smart directory jumping)
 if command -v zoxide >/dev/null 2>&1; then
   eval "$(zoxide init zsh)"
 fi
 
-# FZF Keybindings & Defaults with 'fd'
 if command -v fd >/dev/null 2>&1; then
   export FZF_DEFAULT_COMMAND='fd --type f --strip-cwd-prefix --hidden --follow --exclude .git'
   export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
@@ -95,20 +83,18 @@ if command -v fzf >/dev/null 2>&1; then
   source <(fzf --zsh)
 fi
 
-# Atuin (SQLite history database; Up-arrow kept for inline search)
 if command -v atuin >/dev/null 2>&1; then
   eval "$(atuin init zsh --disable-up-arrow)"
 fi
 
 # ==============================================================================
-# 7. MODULAR ALIASES
+# 7. Aliases
 # ==============================================================================
 [[ -f ~/.config/zsh/aliases.zsh ]] && source ~/.config/zsh/aliases.zsh
 
 # ==============================================================================
-# 8. KEYBINDINGS
+# 8. Keybindings
 # ==============================================================================
-# Bind Up/Down arrows to search history based on prefix already typed
 autoload -U up-line-or-beginning-search
 autoload -U down-line-or-beginning-search
 zle -N up-line-or-beginning-search
@@ -116,7 +102,6 @@ zle -N down-line-or-beginning-search
 bindkey "^[[A" up-line-or-beginning-search
 bindkey "^[[B" down-line-or-beginning-search
 
-# Support for Ctrl+Arrows and Alt+Arrows navigation
 bindkey "^[[1;5D" backward-word
 bindkey "^[[1;5C" forward-word
 bindkey "^[[1;3D" backward-word
