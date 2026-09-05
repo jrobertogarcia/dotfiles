@@ -9,7 +9,7 @@ A fast, modular, polyglot development terminal environment powered by **Antidote
 On any new machine (Fedora, Ubuntu/Debian, Arch, macOS, or WSL):
 
 ```bash
-git clone https://github.com/<your-username>/dotfiles.git ~/dotfiles
+git clone https://github.com/jrobertogarcia/dotfiles.git ~/dotfiles
 cd ~/dotfiles && ./install.sh
 ```
 
