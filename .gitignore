@@ -1,0 +1,12 @@
+# Backup files
+*.pre-dotfiles.bak
+*.bak
+
+# OS metadata
+.DS_Store
+Thumbs.db
+
+# Machine learning models and large binaries
+*.bin
+*.onnx
+models/

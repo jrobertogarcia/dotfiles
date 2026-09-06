@@ -44,10 +44,10 @@ info "Detected environment: $OS ($ARCH)"
 # Helper to check for command
 has_cmd() { command -v "$1" >/dev/null 2>&1; }
 
-# Helper to run sudo if available
+# Helper to run sudo if available (non-interactive check)
 has_sudo() {
   if has_cmd sudo; then
-    sudo -n true 2>/dev/null || sudo -v 2>/dev/null
+    sudo -n true 2>/dev/null
   else
     return 1
   fi
@@ -188,6 +188,18 @@ backup_and_link "$DOTFILES_DIR/zsh/zsh_plugins.txt"  "$HOME/.zsh_plugins.txt"
 backup_and_link "$DOTFILES_DIR/zsh/aliases.zsh"      "$HOME/.config/zsh/aliases.zsh"
 backup_and_link "$DOTFILES_DIR/zsh/CHEATSHEET.md"    "$HOME/.config/zsh/CHEATSHEET.md"
 backup_and_link "$DOTFILES_DIR/config/starship.toml" "$HOME/.config/starship.toml"
+
+# Voxtype configuration (Linux or when voxtype is installed)
+if has_cmd voxtype || [[ "$OS" == "Linux" ]]; then
+  backup_and_link "$DOTFILES_DIR/config/voxtype/config.toml" "$HOME/.config/voxtype/config.toml"
+fi
+
+# Voxtype systemd user service override
+if [[ "$OS" == "Linux" ]] && has_cmd systemctl; then
+  backup_and_link "$DOTFILES_DIR/systemd/user/voxtype.service.d/override.conf" \
+                  "$HOME/.config/systemd/user/voxtype.service.d/override.conf"
+  systemctl --user daemon-reload 2>/dev/null || true
+fi
 
 # ------------------------------------------------------------------------------
 # 6. Antidote Compilation & Git Delta Configuration

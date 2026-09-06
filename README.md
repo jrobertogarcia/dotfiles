@@ -35,8 +35,14 @@ exec zsh
 │   ├── zsh_plugins.txt         # Symlinked to ~/.zsh_plugins.txt
 │   ├── aliases.zsh             # Symlinked to ~/.config/zsh/aliases.zsh
 │   └── CHEATSHEET.md           # Symlinked to ~/.config/zsh/CHEATSHEET.md
-└── config/
-    └── starship.toml           # Symlinked to ~/.config/starship.toml
+├── config/
+│   ├── starship.toml           # Symlinked to ~/.config/starship.toml
+│   └── voxtype/
+│       └── config.toml         # Symlinked to ~/.config/voxtype/config.toml
+└── systemd/
+    └── user/
+        └── voxtype.service.d/
+            └── override.conf   # Symlinked to ~/.config/systemd/user/voxtype.service.d/override.conf
 ```
 
 ---
