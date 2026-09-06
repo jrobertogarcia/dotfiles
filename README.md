@@ -67,16 +67,17 @@ reload
 View the reference guide in the terminal:
 
 ```bash
-zsh-help
+dots-help
 # or
 cheatsheet
 ```
 
 ### Summary
+- **Node**: `n` (`pnpm`), `ni`, `nr`, `na`, `nad`, `nx`.
 - **Python**: `p` (`python3`), `pm <module>`, `pip`, `venv` (activates `.venv`), `mkvenv`.
 - **Git**: `g`, `gs` (status), `gpl` (rebase pull), `gback` (previous branch), `gd` (Delta diffs).
 - **Navigation**: `z <folder>` (frecency jump), `..` / `...`, `<Tab>` (fzf-tab with file and directory previews).
 - **History**: `Ctrl+R` (Atuin SQLite search), `Up`/`Down` (prefix search).
 - **Docker**: `d`, `dc`, `dps` (table format), `dcu`, `dcd`, `dclean`.
-- **Rust/Go**: `c` (`cargo`), `cb`, `cr`, `ct`, `cchk`, `gtt`.
-- **Shell**: `reload` (re-sources `~/.zshrc`).
+- **Rust/Go**: `cg` (`cargo`), `cgb`, `cgr`, `cgt`, `cgchk`, `gtt`.
+- **Shell**: `c` (`clear`), `reload` (re-sources `~/.zshrc`).

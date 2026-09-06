@@ -15,23 +15,25 @@ alias pipreq="python3 -m pip freeze > requirements.txt"
 alias venv='[ -d .venv ] && source .venv/bin/activate || ([ -d venv ] && source venv/bin/activate || echo "No .venv or venv found")'
 alias mkvenv="python3 -m venv .venv"
 alias pyclean='find . -type f -name "*.py[co]" -delete -o -type d -name "__pycache__" -delete'
-alias server="python3 -m http.server"
 
 # ------------------------------------------------------------------------------
-# 2. Node / Package Managers
+# 2. Node / Package Managers (pnpm)
 # ------------------------------------------------------------------------------
-alias pn="pnpm"
-alias nr="npm run"
-alias ni="npm install"
+alias n="pnpm"
+alias ni="pnpm install"
+alias nr="pnpm run"
+alias na="pnpm add"
+alias nad="pnpm add -D"
+alias nx="pnpm dlx"
 
 # ------------------------------------------------------------------------------
-# 3. Rust & Go ('c' family)
+# 3. Rust & Go ('cg' family)
 # ------------------------------------------------------------------------------
-alias c="cargo"
-alias cb="cargo build"
-alias cr="cargo run"
-alias ct="cargo test"
-alias cchk="cargo check"   # Avoids colliding with /usr/bin/cc
+alias cg="cargo"
+alias cgb="cargo build"
+alias cgr="cargo run"
+alias cgt="cargo test"
+alias cgchk="cargo check"   # Avoids colliding with /usr/bin/cc
 alias gtt="go tool task"
 
 # ------------------------------------------------------------------------------
@@ -71,6 +73,7 @@ alias dclean="docker system prune -f"
 # ------------------------------------------------------------------------------
 # 6. Navigation & Core Utilities
 # ------------------------------------------------------------------------------
+alias c="clear"
 alias ..="cd .."
 alias ...="cd ../.."
 alias ....="cd ../../.."
@@ -101,11 +104,18 @@ alias mv="mv -iv"
 # ------------------------------------------------------------------------------
 # 7. System & Shell
 # ------------------------------------------------------------------------------
-alias ports="ss -tulanp"
-alias myip="ip -br -c addr"
+if [[ "$(uname -s)" == "Darwin" ]]; then
+  alias ports="lsof -iTCP -sTCP:LISTEN -P -n"
+  alias myip="ipconfig getifaddr en0 2>/dev/null || ifconfig | grep 'inet ' | grep -v 127.0.0.1 | awk '{print \$2}' | head -n 1"
+else
+  alias ports="ss -tulanp"
+  alias myip="ip -br -c addr"
+fi
+
 alias path='echo $PATH | tr ":" "\n"'
 alias reload="source ~/.zshrc && echo 'Reloaded ~/.zshrc'"
-alias zshrc='${EDITOR:-nano} ~/.zshrc'
-alias aliases='${EDITOR:-nano} ~/.config/zsh/aliases.zsh'
-alias zsh-help="bat --style=plain ~/.config/zsh/CHEATSHEET.md"
+alias zshrc='${EDITOR:-micro} ~/.zshrc'
+alias aliases='${EDITOR:-micro} ~/.config/zsh/aliases.zsh'
+alias plugins='${EDITOR:-micro} ~/.zsh_plugins.txt'
+alias dots-help="bat --style=plain ~/.config/zsh/CHEATSHEET.md"
 alias cheatsheet="bat --style=plain ~/.config/zsh/CHEATSHEET.md"

@@ -1,4 +1,4 @@
-# Zsh Reference
+# Developer Environment Cheatsheet
 
 *Press `q` to exit this viewer.*
 
@@ -21,7 +21,7 @@
 | :--- | :--- |
 | `<Tab>` | Triggers fuzzy completion popup (`fzf-tab`) |
 | `cd <Tab>` | Directory selection with `eza` preview |
-| `cat <Tab>` / `vim <Tab>` | File selection with `bat` syntax preview |
+| `cat <Tab>` / `micro <Tab>` / `vim <Tab>` | File selection with `bat` syntax preview |
 | `Ctrl + N` / `Ctrl + P` (or Arrows) | Navigate candidates in tab menu |
 | `Ctrl + T` | Find file in current tree (respects `.gitignore`) |
 | `**<Tab>` | Trigger FZF recursive completion on paths |
@@ -40,12 +40,25 @@
 
 ---
 
+## Node / Package Managers (pnpm)
+
+| Alias | Command Executed | Description |
+| :--- | :--- | :--- |
+| `n` | `pnpm` | pnpm root command |
+| `ni` | `pnpm install` | Install dependencies |
+| `nr <script>` | `pnpm run <script>` | Run package script |
+| `na <pkg>` | `pnpm add <pkg>` | Add dependency |
+| `nad <pkg>` | `pnpm add -D <pkg>` | Add dev dependency |
+| `nx <pkg>` | `pnpm dlx <pkg>` | Execute binary package without installing |
+
+---
+
 ## Python
 
 | Alias | Command Executed | Description |
 | :--- | :--- | :--- |
 | `p` | `python3` | Python 3 invocation |
-| `pm <module>` | `python3 -m <module>` | Run module (e.g. `pm pytest`, `pm http.server`) |
+| `pm <module>` | `python3 -m <module>` | Run module (e.g. `pm pytest`) |
 | `pip` | `python3 -m pip` | Run pip via current Python binary |
 | `pipin <pkg>` | `python3 -m pip install` | Install package |
 | `pipup <pkg>` | `python3 -m pip install --upgrade` | Upgrade package |
@@ -53,7 +66,6 @@
 | `venv` | `source .venv/bin/activate` | Activate local `.venv` or `venv` |
 | `mkvenv` | `python3 -m venv .venv` | Create virtualenv in `.venv/` |
 | `pyclean` | *bytecode cleanup* | Delete `__pycache__` and `*.pyc` files |
-| `server` | `python3 -m http.server` | Static HTTP server on port 8000 |
 
 ---
 
@@ -96,9 +108,9 @@
 
 | Alias | Command Executed | Description |
 | :--- | :--- | :--- |
-| `c` | `cargo` | Cargo root |
-| `cb` / `cr` / `ct` | `cargo build` / `run` / `test` | Core Cargo tasks |
-| `cchk` | `cargo check` | Typecheck (avoids colliding with `/usr/bin/cc`) |
+| `cg` | `cargo` | Cargo root |
+| `cgb` / `cgr` / `cgt` | `cargo build` / `run` / `test` | Core Cargo tasks |
+| `cgchk` | `cargo check` | Typecheck |
 | `gtt` | `go tool task` | Go task runner |
 
 ---
@@ -107,14 +119,15 @@
 
 | Alias | Target Tool | Description |
 | :--- | :--- | :--- |
+| `c` | `clear` | Clear terminal screen |
 | `ls` / `l` | `eza` | Colorized list, directories first |
 | `ll` | `eza -la --git` | Long format with permissions and Git status |
 | `lt` | `eza --tree --level=2` | 2-level directory tree |
 | `cat` | `bat` | Syntax highlighting and paging |
 | `grep` | `rg` | Ripgrep search |
 | `find` | `fd` | File and directory search |
-| `ports` | `ss -tulanp` | List listening network sockets |
-| `myip` | `ip -br -c addr` | Network interface addresses |
+| `ports` | `ss` (Linux) / `lsof` (macOS) | List listening network sockets |
+| `myip` | `ip` (Linux) / `ipconfig` (macOS) | Network interface addresses |
 | `path` | *formatted PATH* | Prints `$PATH` one entry per line |
 
 ---
@@ -124,8 +137,8 @@
 | Command / File | Location / Action |
 | :--- | :--- |
 | `reload` | Re-sources configuration (`source ~/.zshrc`) |
-| `zshrc` | Edit `~/.zshrc` |
+| `zshrc` | Edit `~/.zshrc` (uses `$EDITOR`, default `micro`) |
 | `aliases` | Edit `~/.config/zsh/aliases.zsh` |
 | `plugins` | Edit `~/.zsh_plugins.txt` |
 | `starship` | Edit `~/.config/starship.toml` |
-| `zsh-help` / `cheatsheet` | Open this reference in the terminal |
+| `dots-help` / `cheatsheet` | Open this reference in the terminal |

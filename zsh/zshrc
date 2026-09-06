@@ -4,8 +4,17 @@
 # Load shared environment (NVM, Go, Cargo, PNPM) first if present
 [ -f ~/.shell_env ] && . ~/.shell_env
 
-# Ensure user binaries take precedence
-export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$HOME/.atuin/bin:$HOME/.gemini/antigravity-cli/bin:$PATH"
+# Default Editor (prefer micro)
+if command -v micro >/dev/null 2>&1; then
+  export EDITOR="micro"
+else
+  export EDITOR="nano"
+fi
+export VISUAL="$EDITOR"
+
+# Package Manager environments & PATH
+export PNPM_HOME="$HOME/.local/share/pnpm"
+export PATH="$PNPM_HOME:$HOME/.local/bin:$HOME/.cargo/bin:$HOME/.atuin/bin:$HOME/.gemini/antigravity-cli/bin:$PATH"
 
 # ==============================================================================
 # 2. Antidote & fpath
@@ -44,7 +53,7 @@ zstyle ':completion:*:descriptions' format '[%d]'
 zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
 zstyle ':completion:*' menu no
 zstyle ':fzf-tab:complete:cd:*' fzf-preview 'eza -1 --color=always $realpath'
-zstyle ':fzf-tab:complete:(cat|bat|vim|nvim):*' fzf-preview 'bat --style=numbers --color=always --line-range :100 $realpath'
+zstyle ':fzf-tab:complete:(cat|bat|vim|nvim|micro):*' fzf-preview 'bat --style=numbers --color=always --line-range :100 $realpath'
 zstyle ':fzf-tab:*' fzf-flags --height=40% --layout=reverse
 
 # ==============================================================================
