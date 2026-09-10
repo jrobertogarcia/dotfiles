@@ -14,6 +14,11 @@ cd ~/dotfiles && ./install.sh
 exec zsh
 ```
 
+#### Modular installation flags:
+- `./install.sh --links-only`: Only establish configuration symlinks (with `.bak` backups) without downloading tools.
+- `./install.sh --voxtype-only`: Only link Voxtype configuration and user systemd service override.
+- `./install.sh --tools-only`: Only install CLI utilities (`starship`, `atuin`, etc.) and Antidote.
+
 ### What `install.sh` Does
 1. Checks for prerequisites (`zsh`, `git`, `curl`).
 2. Installs CLI utilities (`starship`, `zoxide`, `atuin`, `eza`, `bat`, `delta`, `fd`, `fzf`). If `sudo` is not available, downloads precompiled binaries to `~/.local/bin`.

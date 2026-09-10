@@ -25,12 +25,12 @@ modifiers = []
 # Activation mode: "push_to_talk" or "toggle"
 # - push_to_talk: Hold hotkey to record, release to transcribe (default)
 # - toggle: Press hotkey once to start recording, press again to stop
-# mode = "push_to_talk"
+mode = "toggle"
 
 # Enable built-in hotkey detection (default: true)
-# Set to false when using compositor keybindings (Hyprland, Sway) instead
+# Set to false when using compositor keybindings (Hyprland, Sway, GNOME) instead
 # When disabled, use `voxtype record start/stop/toggle` to control recording
-# enabled = true
+enabled = false
 
 # Modifier key to select secondary model (evdev input mode only)
 # When held while pressing the hotkey, uses whisper.secondary_model instead
@@ -52,15 +52,15 @@ max_duration_secs = 180
 # resume them when recording stops. Requires playerctl.
 # pause_media = false
 
-# [audio.feedback]
+[audio.feedback]
 # Enable audio feedback sounds (beeps when recording starts/stops)
-# enabled = true
-#
+enabled = true
+
 # Sound theme: "default", "subtle", "mechanical", or path to custom theme directory
-# theme = "default"
-#
+theme = "default"
+
 # Volume level (0.0 to 1.0)
-# volume = 0.7
+volume = 0.7
 
 [whisper]
 # Transcription backend: "local" or "remote"
@@ -313,3 +313,15 @@ min_speech_duration_ms = 100  # Minimum speech required
 
 [parakeet]
 model = "parakeet-tdt-0.6b-v3-int8"
+
+[osd]
+enabled = true
+backend = "gtk4"
+position = "bottom-center"
+width_px = 280
+height_px = 36
+margin_px = 50
+top_margin = 0.88
+opacity = 0.90
+waveform_window_secs = 1.2
+waveform_gain = 8.0

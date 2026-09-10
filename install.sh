@@ -25,7 +25,65 @@ success() { echo -e "${GREEN}${BOLD}✓${NC} $*"; }
 warn()    { echo -e "${YELLOW}${BOLD}!${NC} $*"; }
 error()   { echo -e "${RED}${BOLD}✗${NC} $*"; exit 1; }
 
-info "Starting installation from: $DOTFILES_DIR"
+# Helper to check for command
+has_cmd() { command -v "$1" >/dev/null 2>&1; }
+
+# Helper to run sudo if available (non-interactive check)
+has_sudo() {
+  if has_cmd sudo; then
+    sudo -n true 2>/dev/null
+  else
+    return 1
+  fi
+}
+
+usage() {
+  cat << USAGE
+Dotfiles Installer
+
+Usage:
+  ./install.sh [OPTION]
+
+Options:
+  --all             Default. Run full bootstrap (system pkgs, tools, antidote, symlinks, git).
+  --links-only      Only create configuration symlinks (with backups).
+  --voxtype-only    Only create Voxtype configuration and systemd override symlinks.
+  --tools-only      Only install CLI utilities and antidote.
+  -h, --help        Show this help message.
+
+USAGE
+}
+
+MODE="all"
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --all)
+      MODE="all"
+      shift
+      ;;
+    --links-only|--symlinks)
+      MODE="links-only"
+      shift
+      ;;
+    --voxtype-only|--voxtype)
+      MODE="voxtype-only"
+      shift
+      ;;
+    --tools-only)
+      MODE="tools-only"
+      shift
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      error "Unknown option: $1. Run with --help for available options."
+      ;;
+  esac
+done
+
+info "Starting installation (mode: $MODE) from: $DOTFILES_DIR"
 
 # ------------------------------------------------------------------------------
 # 1. System & Architecture Detection
@@ -41,17 +99,57 @@ esac
 
 info "Detected environment: $OS ($ARCH)"
 
-# Helper to check for command
-has_cmd() { command -v "$1" >/dev/null 2>&1; }
+# ------------------------------------------------------------------------------
+# Symlinking Functions & Declarative Maps
+# ------------------------------------------------------------------------------
+backup_and_link() {
+  local src="$1"
+  local dst="$2"
 
-# Helper to run sudo if available (non-interactive check)
-has_sudo() {
-  if has_cmd sudo; then
-    sudo -n true 2>/dev/null
-  else
-    return 1
+  mkdir -p "$(dirname "$dst")"
+
+  if [[ -e "$dst" && ! -L "$dst" ]]; then
+    local backup="${dst}.pre-dotfiles.bak"
+    warn "Backing up $dst to $backup"
+    mv "$dst" "$backup"
+  fi
+
+  ln -sfn "$src" "$dst"
+  success "Linked $dst -> $src"
+}
+
+link_core() {
+  info "Linking core shell configuration..."
+  backup_and_link "$DOTFILES_DIR/zsh/zshrc"          "$HOME/.zshrc"
+  backup_and_link "$DOTFILES_DIR/zsh/zsh_plugins.txt"  "$HOME/.zsh_plugins.txt"
+  backup_and_link "$DOTFILES_DIR/zsh/aliases.zsh"      "$HOME/.config/zsh/aliases.zsh"
+  backup_and_link "$DOTFILES_DIR/zsh/CHEATSHEET.md"    "$HOME/.config/zsh/CHEATSHEET.md"
+  backup_and_link "$DOTFILES_DIR/config/starship.toml" "$HOME/.config/starship.toml"
+}
+
+link_voxtype() {
+  info "Linking Voxtype configuration..."
+  backup_and_link "$DOTFILES_DIR/config/voxtype/config.toml" "$HOME/.config/voxtype/config.toml"
+
+  if [[ "$OS" == "Linux" ]] && has_cmd systemctl; then
+    backup_and_link "$DOTFILES_DIR/systemd/user/voxtype.service.d/override.conf" \
+                    "$HOME/.config/systemd/user/voxtype.service.d/override.conf"
+    systemctl --user daemon-reload 2>/dev/null || true
   fi
 }
+
+if [[ "$MODE" == "voxtype-only" ]]; then
+  link_voxtype
+  success "Voxtype symlinks established."
+  exit 0
+fi
+
+if [[ "$MODE" == "links-only" ]]; then
+  link_core
+  link_voxtype
+  success "All configuration symlinks established."
+  exit 0
+fi
 
 # ------------------------------------------------------------------------------
 # 2. Package Management & Core Prerequisites
@@ -77,25 +175,26 @@ has_cmd git  || error "git is required. Please install git on this system."
 has_cmd curl || error "curl is required. Please install curl on this system."
 
 # ------------------------------------------------------------------------------
-# 3. CLI Tools Installation
+# 3. Modern CLI Utilities
 # ------------------------------------------------------------------------------
-info "Checking CLI tools in $BIN_DIR..."
+info "Setting up modern CLI utilities..."
 
 # 3.1 Starship Prompt
 if ! has_cmd starship; then
   info "Installing Starship..."
-  curl -sS https://starship.rs/install.sh | sh -s -- -y --bin-dir "$BIN_DIR"
+  curl -sS https://starship.rs/install.sh | sh -s -- -y -b "$BIN_DIR"
 fi
-success "Starship ready: $(starship --version | head -n 1)"
+success "Starship ready: $(starship --version 2>/dev/null | head -n1 || echo 'installed')"
 
-# 3.2 Zoxide
+# 3.2 Zoxide (smart cd)
 if ! has_cmd zoxide; then
   info "Installing Zoxide..."
   curl -sSfL https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | sh
+  [[ -f "$HOME/.local/bin/zoxide" ]] && cp -f "$HOME/.local/bin/zoxide" "$BIN_DIR/"
 fi
 success "Zoxide ready: $(zoxide --version 2>/dev/null || echo 'installed')"
 
-# 3.3 Atuin
+# 3.3 Atuin (shell history)
 if ! has_cmd atuin; then
   info "Installing Atuin..."
   curl --proto '=https' --tlsv1.2 -LsSf https://setup.atuin.sh | sh
@@ -162,44 +261,16 @@ else
   success "Antidote present at ~/.antidote"
 fi
 
+if [[ "$MODE" == "tools-only" ]]; then
+  success "CLI utilities and Antidote setup complete."
+  exit 0
+fi
+
 # ------------------------------------------------------------------------------
 # 5. Backup & Symlink Dotfiles
 # ------------------------------------------------------------------------------
-info "Setting up symlinks..."
-
-backup_and_link() {
-  local src="$1"
-  local dst="$2"
-
-  mkdir -p "$(dirname "$dst")"
-
-  if [[ -e "$dst" && ! -L "$dst" ]]; then
-    local backup="${dst}.pre-dotfiles.bak"
-    warn "Backing up $dst to $backup"
-    mv "$dst" "$backup"
-  fi
-
-  ln -sfn "$src" "$dst"
-  success "Linked $dst -> $src"
-}
-
-backup_and_link "$DOTFILES_DIR/zsh/zshrc"          "$HOME/.zshrc"
-backup_and_link "$DOTFILES_DIR/zsh/zsh_plugins.txt"  "$HOME/.zsh_plugins.txt"
-backup_and_link "$DOTFILES_DIR/zsh/aliases.zsh"      "$HOME/.config/zsh/aliases.zsh"
-backup_and_link "$DOTFILES_DIR/zsh/CHEATSHEET.md"    "$HOME/.config/zsh/CHEATSHEET.md"
-backup_and_link "$DOTFILES_DIR/config/starship.toml" "$HOME/.config/starship.toml"
-
-# Voxtype configuration (Linux or when voxtype is installed)
-if has_cmd voxtype || [[ "$OS" == "Linux" ]]; then
-  backup_and_link "$DOTFILES_DIR/config/voxtype/config.toml" "$HOME/.config/voxtype/config.toml"
-fi
-
-# Voxtype systemd user service override
-if [[ "$OS" == "Linux" ]] && has_cmd systemctl; then
-  backup_and_link "$DOTFILES_DIR/systemd/user/voxtype.service.d/override.conf" \
-                  "$HOME/.config/systemd/user/voxtype.service.d/override.conf"
-  systemctl --user daemon-reload 2>/dev/null || true
-fi
+link_core
+link_voxtype
 
 # ------------------------------------------------------------------------------
 # 6. Antidote Compilation & Git Delta Configuration
@@ -238,5 +309,5 @@ fi
 echo ""
 echo -e "${GREEN}${BOLD}Setup completed.${NC}"
 echo -e "Start a new session: ${BOLD}exec zsh${NC}"
-echo -e "Open reference: ${BOLD}zsh-help${NC}"
+echo -e "Open reference: ${BOLD}dots-help${NC}"
 echo ""
