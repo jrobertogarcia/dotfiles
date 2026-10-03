@@ -11,7 +11,7 @@
 | `z <query>` | Jump to directory matching query (e.g. `z myproj`) |
 | `zi` | Interactive directory selection with FZF |
 | `..` / `...` / `....` | Jump up 1, 2, or 3 directory levels |
-| `Alt + C` | Find directory in current tree and `cd` into it |
+| `Alt + C` | Find directory in current tree and `cd` into it (macOS: needs Ghostty `macos-option-as-alt = true`, set by `install.sh`) |
 
 ---
 
@@ -49,7 +49,7 @@
 | `nr <script>` | `pnpm run <script>` | Run package script |
 | `na <pkg>` | `pnpm add <pkg>` | Add dependency |
 | `nad <pkg>` | `pnpm add -D <pkg>` | Add dev dependency |
-| `nx <pkg>` | `pnpm dlx <pkg>` | Execute binary package without installing |
+| `nx <pkg>` | `pnpm dlx <pkg>` | Execute binary package without installing (shadows the Nx monorepo CLI) |
 
 ---
 
@@ -59,7 +59,7 @@
 | :--- | :--- | :--- |
 | `p` | `python3` | Python 3 invocation |
 | `pm <module>` | `python3 -m <module>` | Run module (e.g. `pm pytest`) |
-| `pip` | `python3 -m pip` | Run pip via current Python binary |
+| `pip` | `python3 -m pip` | Run pip via current Python binary (Homebrew Python is PEP 668 locked: use `venv` or `uv` outside a venv) |
 | `pipin <pkg>` | `python3 -m pip install` | Install package |
 | `pipup <pkg>` | `python3 -m pip install --upgrade` | Upgrade package |
 | `pipreq` | `python3 -m pip freeze > requirements.txt` | Export requirements |
@@ -124,8 +124,8 @@
 | `ll` | `eza -la --git` | Long format with permissions and Git status |
 | `lt` | `eza --tree --level=2` | 2-level directory tree |
 | `cat` | `bat` | Syntax highlighting and paging |
-| `grep` | `rg` | Ripgrep search |
-| `find` | `fd` | File and directory search |
+| `grep` | `rg` | Ripgrep search. Flags differ: `-E` = encoding, `-r` = replace. Use `\grep` for real grep |
+| `find` | `fd` | `fd PATTERN [PATH]` syntax, ignores hidden/.gitignored files. Use `command find` for real find |
 | `ports` | `ss` (Linux) / `lsof` (macOS) | List listening network sockets |
 | `myip` | `ip` (Linux) / `ipconfig` (macOS) | Network interface addresses |
 | `path` | *formatted PATH* | Prints `$PATH` one entry per line |
@@ -140,5 +140,5 @@
 | `zshrc` | Edit `~/.zshrc` (uses `$EDITOR`, default `micro`) |
 | `aliases` | Edit `~/.config/zsh/aliases.zsh` |
 | `plugins` | Edit `~/.zsh_plugins.txt` |
-| `starship` | Edit `~/.config/starship.toml` |
+| `~/.config/starship.toml` | Prompt config (edit directly) |
 | `dots-help` / `cheatsheet` | Open this reference in the terminal |
