@@ -1,6 +1,6 @@
 # Dotfiles
 
-Zsh configuration and CLI environment for Linux and macOS. Uses Antidote for plugin management, Starship for prompts, fzf-tab for completion, and Atuin for history.
+Zsh configuration and CLI environment for Linux and macOS (Apple Silicon and Intel). Uses Antidote for plugin management, Starship for prompts, fzf-tab for completion, and Atuin for history.
 
 ---
 
@@ -16,15 +16,16 @@ exec zsh
 
 #### Modular installation flags:
 - `./install.sh --links-only`: Only establish configuration symlinks (with `.bak` backups) without downloading tools.
-- `./install.sh --voxtype-only`: Only link Voxtype configuration and user systemd service override.
+- `./install.sh --voxtype-only`: Only link Voxtype configuration and user systemd service override (Linux only).
 - `./install.sh --tools-only`: Only install CLI utilities (`starship`, `atuin`, etc.) and Antidote.
 
 ### What `install.sh` Does
 1. Checks for prerequisites (`zsh`, `git`, `curl`).
-2. Installs CLI utilities (`starship`, `zoxide`, `atuin`, `eza`, `bat`, `delta`, `fd`, `fzf`). If `sudo` is not available, downloads precompiled binaries to `~/.local/bin`.
+2. Installs CLI utilities (`starship`, `zoxide`, `atuin`, `eza`, `bat`, `delta`, `fd`, `fzf`, `ripgrep`, `micro`). On macOS this uses Homebrew (`zsh`, `git` and `curl` come from the OS). On Linux without `sudo`, precompiled x86_64 binaries go to `~/.local/bin`.
 3. Clones Antidote to `~/.antidote`.
 4. Backs up existing configuration files to `*.pre-dotfiles.bak`.
-5. Symlinks configuration files from `~/dotfiles/` to `$HOME`.
+5. Symlinks configuration files from `~/dotfiles/` to `$HOME`. On **macOS**, `~/.zshrc` stays a real file (other tools such as Lyft's dev tooling append to it); the installer only adds a marker-delimited `source` line for `zsh/zshrc` at the top.
+   macOS extras: Ghostty `macos-option-as-alt = true`, `~/.docker/cli-plugins/docker-compose` for Rancher Desktop, and a one-time local `atuin import auto`.
 6. Compiles Antidote plugins and configures Git to use Delta for diffs.
 
 ---
@@ -36,7 +37,7 @@ exec zsh
 ├── install.sh                  # Bootstrap installer
 ├── README.md                   # Documentation
 ├── zsh/
-│   ├── zshrc                   # Symlinked to ~/.zshrc
+│   ├── zshrc                   # Symlinked to ~/.zshrc (Linux) / sourced from ~/.zshrc (macOS)
 │   ├── zsh_plugins.txt         # Symlinked to ~/.zsh_plugins.txt
 │   ├── aliases.zsh             # Symlinked to ~/.config/zsh/aliases.zsh
 │   └── CHEATSHEET.md           # Symlinked to ~/.config/zsh/CHEATSHEET.md
@@ -54,7 +55,7 @@ exec zsh
 
 ## Workflow
 
-All configuration files in `$HOME` are symlinks pointing to `~/dotfiles`.
+Configuration files in `$HOME` are symlinks pointing to `~/dotfiles` (on macOS `~/.zshrc` sources `zsh/zshrc` instead).
 
 ### Pushing changes:
 ```bash

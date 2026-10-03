@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # Dotfiles Bootstrap Installer
-# Supports: Linux (Fedora, Debian/Ubuntu, Arch) and macOS
+# Supports: Linux (Fedora, Debian/Ubuntu, Arch) and macOS (Apple Silicon / Intel)
 # ==============================================================================
 set -euo pipefail
 
@@ -46,8 +46,9 @@ Usage:
 
 Options:
   --all             Default. Run full bootstrap (system pkgs, tools, antidote, symlinks, git).
-  --links-only      Only create configuration symlinks (with backups).
-  --voxtype-only    Only create Voxtype configuration and systemd override symlinks.
+  --links-only      Only create configuration links (with backups). On macOS this
+                    adds a loader line to ~/.zshrc instead of replacing it.
+  --voxtype-only    Only create Voxtype configuration and systemd override symlinks (Linux).
   --tools-only      Only install CLI utilities and antidote.
   -h, --help        Show this help message.
 
@@ -118,9 +119,49 @@ backup_and_link() {
   success "Linked $dst -> $src"
 }
 
+# macOS: ~/.zshrc is owned by Lyft tooling (fnm, aactivator, localdevtools, Rancher
+# append their own blocks to it), so keep it a real file and just source ours.
+link_zshrc_loader() {
+  local rc="$HOME/.zshrc"
+  local start="### dotfiles start"
+  local end="### dotfiles end"
+
+  if [[ -L "$rc" ]]; then
+    warn "$rc is a symlink; replacing it with a real file that sources the dotfiles"
+    local target; target="$(readlink "$rc")"
+    rm "$rc"
+    [[ -f "$target" ]] && cp "$target" "$rc" || touch "$rc"
+  fi
+  [[ -f "$rc" ]] || touch "$rc"
+
+  if grep -qF "$start" "$rc"; then
+    success "Loader already present in $rc"
+    return 0
+  fi
+
+  [[ -e "$rc.pre-dotfiles.bak" ]] || { cp "$rc" "$rc.pre-dotfiles.bak"; warn "Backed up $rc to $rc.pre-dotfiles.bak"; }
+
+  local tmp; tmp="$(mktemp)"
+  {
+    echo "$start"
+    echo "# Managed by $DOTFILES_DIR/install.sh (do not remove)"
+    echo "[[ -f \"$DOTFILES_DIR/zsh/zshrc\" ]] && source \"$DOTFILES_DIR/zsh/zshrc\""
+    echo "$end"
+    echo
+    cat "$rc"
+  } > "$tmp"
+  cat "$tmp" > "$rc"
+  rm -f "$tmp"
+  success "Added dotfiles loader to $rc"
+}
+
 link_core() {
   info "Linking core shell configuration..."
-  backup_and_link "$DOTFILES_DIR/zsh/zshrc"          "$HOME/.zshrc"
+  if [[ "$OS" == "Darwin" ]]; then
+    link_zshrc_loader
+  else
+    backup_and_link "$DOTFILES_DIR/zsh/zshrc"        "$HOME/.zshrc"
+  fi
   backup_and_link "$DOTFILES_DIR/zsh/zsh_plugins.txt"  "$HOME/.zsh_plugins.txt"
   backup_and_link "$DOTFILES_DIR/zsh/aliases.zsh"      "$HOME/.config/zsh/aliases.zsh"
   backup_and_link "$DOTFILES_DIR/zsh/CHEATSHEET.md"    "$HOME/.config/zsh/CHEATSHEET.md"
@@ -128,13 +169,47 @@ link_core() {
 }
 
 link_voxtype() {
+  if [[ "$OS" != "Linux" ]]; then
+    warn "Voxtype is Linux-only; skipping on $OS"
+    return 0
+  fi
   info "Linking Voxtype configuration..."
   backup_and_link "$DOTFILES_DIR/config/voxtype/config.toml" "$HOME/.config/voxtype/config.toml"
 
-  if [[ "$OS" == "Linux" ]] && has_cmd systemctl; then
+  if has_cmd systemctl; then
     backup_and_link "$DOTFILES_DIR/systemd/user/voxtype.service.d/override.conf" \
                     "$HOME/.config/systemd/user/voxtype.service.d/override.conf"
     systemctl --user daemon-reload 2>/dev/null || true
+  fi
+}
+
+# macOS-only extras: Ghostty Option key, Rancher compose plugin, Atuin history import
+setup_macos() {
+  [[ "$OS" == "Darwin" ]] || return 0
+  info "Applying macOS extras..."
+
+  # Option acts as Alt so fzf's Alt+C works (otherwise it types 'ç')
+  local gcfg="$HOME/Library/Application Support/com.mitchellh.ghostty/config.ghostty"
+  if [[ -d "/Applications/Ghostty.app" ]]; then
+    mkdir -p "$(dirname "$gcfg")"
+    if ! grep -qE '^[[:space:]]*macos-option-as-alt[[:space:]]*=' "$gcfg" 2>/dev/null; then
+      printf '\nmacos-option-as-alt = true\n' >> "$gcfg"
+      success "Ghostty: enabled macos-option-as-alt"
+    else
+      success "Ghostty: macos-option-as-alt already configured"
+    fi
+  fi
+
+  # Register Rancher Desktop's compose binary as a docker CLI plugin (`docker compose`)
+  if [[ -x "$HOME/.rd/bin/docker-compose" ]]; then
+    mkdir -p "$HOME/.docker/cli-plugins"
+    ln -sfn "$HOME/.rd/bin/docker-compose" "$HOME/.docker/cli-plugins/docker-compose"
+    success "Docker: linked compose CLI plugin"
+  fi
+
+  # One-time local-only import of existing shell history (no sync account)
+  if has_cmd atuin && [[ ! -e "$HOME/.local/share/atuin/history.db" ]]; then
+    atuin import auto >/dev/null 2>&1 && success "Atuin: imported existing history" || warn "Atuin import skipped"
   fi
 }
 
@@ -147,7 +222,8 @@ fi
 if [[ "$MODE" == "links-only" ]]; then
   link_core
   link_voxtype
-  success "All configuration symlinks established."
+  setup_macos
+  success "All configuration links established."
   exit 0
 fi
 
@@ -164,7 +240,14 @@ install_system_packages() {
   elif has_cmd pacman; then
     has_sudo && sudo pacman -Sy --noconfirm zsh git curl fzf ripgrep || warn "No sudo access; skipping pacman install"
   elif has_cmd brew; then
-    brew install zsh git curl fzf ripgrep bat eza zoxide starship atuin git-delta fd
+    # zsh/git/curl come from macOS (Apple git sits next to Lyft's git hooks); do not shadow them
+    local pkgs=(fzf ripgrep bat eza zoxide starship atuin git-delta fd micro) missing=() p
+    for p in "${pkgs[@]}"; do
+      brew list --formula "$p" >/dev/null 2>&1 || missing+=("$p")
+    done
+    if (( ${#missing[@]} )); then
+      brew install "${missing[@]}"
+    fi
   fi
 }
 
@@ -271,6 +354,7 @@ fi
 # ------------------------------------------------------------------------------
 link_core
 link_voxtype
+setup_macos
 
 # ------------------------------------------------------------------------------
 # 6. Antidote Compilation & Git Delta Configuration
@@ -294,9 +378,14 @@ fi
 # 7. Verification & Default Shell
 # ------------------------------------------------------------------------------
 info "Validating Zsh syntax..."
-zsh -n "$HOME/.zshrc" && success "Syntax check passed"
+zsh -n "$DOTFILES_DIR/zsh/zshrc" && zsh -n "$HOME/.zshrc" && success "Syntax check passed"
 
-CURRENT_SHELL="$(getent passwd "$USER" 2>/dev/null | cut -d: -f7 || echo "$SHELL")"
+if [[ "$OS" == "Darwin" ]]; then
+  CURRENT_SHELL="$(dscl . -read "/Users/$USER" UserShell 2>/dev/null | awk '{print $2}')"
+else
+  CURRENT_SHELL="$(getent passwd "$USER" 2>/dev/null | cut -d: -f7 || true)"
+fi
+CURRENT_SHELL="${CURRENT_SHELL:-$SHELL}"
 if [[ "$CURRENT_SHELL" != *"zsh"* ]]; then
   ZSH_PATH="$(command -v zsh)"
   info "Default shell: $CURRENT_SHELL"

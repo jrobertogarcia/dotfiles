@@ -1,7 +1,8 @@
 # ==============================================================================
 # 1. Environment & PATH
 # ==============================================================================
-# Load shared environment (NVM, Go, Cargo, PNPM) first if present
+# Load shared environment (Go, Cargo, PNPM) first if present.
+# Node versions are managed by fnm (initialised outside this file on Lyft machines).
 [ -f ~/.shell_env ] && . ~/.shell_env
 
 # Default Editor (prefer micro)
@@ -14,7 +15,7 @@ export VISUAL="$EDITOR"
 
 # Package Manager environments & PATH
 export PNPM_HOME="$HOME/.local/share/pnpm"
-export PATH="$PNPM_HOME:$HOME/.local/bin:$HOME/.cargo/bin:$HOME/.atuin/bin:$HOME/.gemini/antigravity-cli/bin:$PATH"
+export PATH="$PNPM_HOME:$HOME/.local/bin:$HOME/.cargo/bin:$HOME/.atuin/bin:$PATH"
 
 # ==============================================================================
 # 2. Antidote & fpath
@@ -32,17 +33,32 @@ if [[ -f ~/.antidote/antidote.zsh ]]; then
 fi
 
 # ==============================================================================
-# 3. Completion Engine (Cached 24hr)
+# 3. Completion Engine (full rebuild at most every 24h; portable BSD/GNU)
 # ==============================================================================
 autoload -Uz compinit
-typeset -i updated_at=$(date +'%j' -r ~/.zcompdump 2>/dev/null || echo 0)
-if [ $(date +'%j') != $updated_at ]; then
+if [[ -n ~/.zcompdump(#qN.mh+24) || ! -f ~/.zcompdump ]]; then
   compinit -i
 else
   compinit -C -i
 fi
 
-# Load compiled plugins (fzf-tab loads after compinit, before highlighting)
+# fzf must be initialised BEFORE fzf-tab so fzf-tab is the last widget bound to ^I
+if command -v fd >/dev/null 2>&1; then
+  export FZF_DEFAULT_COMMAND='fd --type f --strip-cwd-prefix --hidden --follow --exclude .git'
+  export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+  export FZF_ALT_C_COMMAND='fd --type d --strip-cwd-prefix --hidden --follow --exclude .git'
+fi
+
+if command -v fzf >/dev/null 2>&1; then
+  source <(fzf --zsh)
+fi
+
+# macOS ships no LS_COLORS; derive it from GNU coreutils when available
+if [[ -z "$LS_COLORS" ]] && command -v gdircolors >/dev/null 2>&1; then
+  eval "$(gdircolors -b)"
+fi
+
+# Load compiled plugins (fzf-tab loads after compinit and fzf, before highlighting)
 [[ -f ~/.zsh_plugins.zsh ]] && source ~/.zsh_plugins.zsh
 
 # ==============================================================================
@@ -72,7 +88,7 @@ setopt HIST_REDUCE_BLANKS
 setopt interactivecomments
 
 # ==============================================================================
-# 6. Tool Integrations (Starship, Zoxide, FZF, Atuin)
+# 6. Tool Integrations (Starship, Zoxide, Atuin; FZF is in section 3)
 # ==============================================================================
 if [[ "$TERM" != "dumb" ]] && command -v starship >/dev/null 2>&1; then
   eval "$(starship init zsh)"
@@ -80,16 +96,6 @@ fi
 
 if command -v zoxide >/dev/null 2>&1; then
   eval "$(zoxide init zsh)"
-fi
-
-if command -v fd >/dev/null 2>&1; then
-  export FZF_DEFAULT_COMMAND='fd --type f --strip-cwd-prefix --hidden --follow --exclude .git'
-  export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
-  export FZF_ALT_C_COMMAND='fd --type d --strip-cwd-prefix --hidden --follow --exclude .git'
-fi
-
-if command -v fzf >/dev/null 2>&1; then
-  source <(fzf --zsh)
 fi
 
 if command -v atuin >/dev/null 2>&1; then
