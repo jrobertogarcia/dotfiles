@@ -183,6 +183,15 @@ link_voxtype() {
   fi
 }
 
+link_hammerspoon() {
+  if [[ "$OS" != "Darwin" ]]; then
+    warn "Hammerspoon is macOS-only; skipping on $OS"
+    return 0
+  fi
+  info "Linking Hammerspoon configuration..."
+  backup_and_link "$DOTFILES_DIR/config/hammerspoon/init.lua" "$HOME/.hammerspoon/init.lua"
+}
+
 # macOS-only extras: Ghostty Option key, Rancher compose plugin, Atuin history import
 setup_macos() {
   [[ "$OS" == "Darwin" ]] || return 0
@@ -222,6 +231,7 @@ fi
 if [[ "$MODE" == "links-only" ]]; then
   link_core
   link_voxtype
+  link_hammerspoon
   setup_macos
   success "All configuration links established."
   exit 0
@@ -354,6 +364,7 @@ fi
 # ------------------------------------------------------------------------------
 link_core
 link_voxtype
+link_hammerspoon
 setup_macos
 
 # ------------------------------------------------------------------------------
