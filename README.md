@@ -25,6 +25,7 @@ exec zsh
 3. Clones Antidote to `~/.antidote`.
 4. Backs up existing configuration files to `*.pre-dotfiles.bak`.
 5. Symlinks configuration files from `~/dotfiles/` to `$HOME`. On **macOS**, `~/.zshrc` stays a real file (other tools such as Lyft's dev tooling append to it); the installer only adds a marker-delimited `source` line for `zsh/zshrc` at the top.
+   On macOS, `~/.hammerspoon/init.lua` (Option+1..7 app launcher) is also linked. Hammerspoon itself is not installed by the script; install it and grant it Accessibility permission.
    macOS extras: Ghostty `macos-option-as-alt = true`, `~/.docker/cli-plugins/docker-compose` for Rancher Desktop, and a one-time local `atuin import auto`.
 6. Compiles Antidote plugins and configures Git to use Delta for diffs.
 
@@ -43,6 +44,8 @@ exec zsh
 │   └── CHEATSHEET.md           # Symlinked to ~/.config/zsh/CHEATSHEET.md
 ├── config/
 │   ├── starship.toml           # Symlinked to ~/.config/starship.toml
+│   ├── hammerspoon/
+│   │   └── init.lua            # Symlinked to ~/.hammerspoon/init.lua (macOS)
 │   └── voxtype/
 │       └── config.toml         # Symlinked to ~/.config/voxtype/config.toml
 └── systemd/
