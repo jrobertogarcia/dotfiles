@@ -77,4 +77,32 @@ for n, bundleID in pairs(APP_MAP) do
     hs.hotkey.bind({ "alt" }, tostring(n), function() launchOrCycle(bundleID) end)
 end
 
+-- GNOME-style Option+scroll: mouse wheel switches Spaces via the Mission Control
+-- "Move left/right a space" shortcuts (Ctrl+Left/Right). Trackpad scrolls pass through.
+-- Global, not local: a local eventtap gets garbage-collected and stops firing.
+local SCROLL = hs.eventtap.event.properties
+local lastSpaceSwitch = 0
+
+-- Arrow keys need the fn flag (as on a real keyboard); hs.eventtap.keyStroke omits it
+-- and the shortcut then fires only intermittently.
+local function switchSpace(key)
+    for _, down in ipairs({ true, false }) do
+        hs.eventtap.event.newKeyEvent(key, down):setFlags({ ctrl = true, fn = true }):post()
+    end
+end
+
+spaceScrollTap = hs.eventtap.new({ hs.eventtap.event.types.scrollWheel }, function(e)
+    local f = e:getFlags()
+    if not (f.alt and not (f.cmd or f.ctrl or f.shift)) then return false end
+    if e:getProperty(SCROLL.scrollWheelEventIsContinuous) ~= 0 then return false end
+    local dy = e:getProperty(SCROLL.scrollWheelEventDeltaAxis1)
+    if dy == 0 then return true end
+    local now = hs.timer.secondsSinceEpoch()
+    if now - lastSpaceSwitch > 0.25 then -- one switch per notch burst
+        lastSpaceSwitch = now
+        switchSpace(dy > 0 and "left" or "right")
+    end
+    return true
+end):start()
+
 hs.alert.show("Hammerspoon config loaded")
