@@ -105,4 +105,27 @@ spaceScrollTap = hs.eventtap.new({ hs.eventtap.event.types.scrollWheel }, functi
     return true
 end):start()
 
+-- GNOME-style Super+arrows on Ctrl+Option (plain Option+arrows is word/paragraph nav):
+-- Left/Right snap to halves, Up maximizes, Down restores the pre-snap frame.
+local SNAP_MODS = { "ctrl", "alt" }
+local preSnapFrames = {} -- window id -> frame before the first snap; lost on reload
+
+local function snap(unit)
+    local win = hs.window.focusedWindow()
+    if not win then return end
+    preSnapFrames[win:id()] = preSnapFrames[win:id()] or win:frame()
+    win:moveToUnit(unit)
+end
+
+hs.hotkey.bind(SNAP_MODS, "left", function() snap({ 0, 0, 0.5, 1 }) end)
+hs.hotkey.bind(SNAP_MODS, "right", function() snap({ 0.5, 0, 0.5, 1 }) end)
+hs.hotkey.bind(SNAP_MODS, "up", function() snap({ 0, 0, 1, 1 }) end)
+hs.hotkey.bind(SNAP_MODS, "down", function()
+    local win = hs.window.focusedWindow()
+    local frame = win and preSnapFrames[win:id()]
+    if not frame then return end
+    win:setFrame(frame)
+    preSnapFrames[win:id()] = nil
+end)
+
 hs.alert.show("Hammerspoon config loaded")
