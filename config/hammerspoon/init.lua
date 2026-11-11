@@ -128,4 +128,69 @@ hs.hotkey.bind(SNAP_MODS, "down", function()
     preSnapFrames[win:id()] = nil
 end)
 
+-- Ctrl+Option+Shift+Left/Right carries the focused window to the adjacent Space by
+-- holding its title bar while switching Spaces.
+-- hs.spaces.moveWindowToSpace silently does nothing for other apps' windows on macOS 27.
+local MouseEvent = hs.eventtap.event
+local MouseTypes = MouseEvent.types
+-- macOS 27 drops a synthetic drag whose events don't share one kCGMouseEventNumber;
+-- start above the real HID counter, as PaperWM.spoon and OpenJDK's Robot do.
+local mouseEventNumber = 32000
+
+local function mouseEvent(kind, pos, number, dx, dy)
+    MouseEvent.newMouseEvent(kind, pos):rawFlags(0)
+        :setProperty(MouseEvent.properties.mouseEventNumber, number)
+        :setProperty(MouseEvent.properties.mouseEventClickState, 1)
+        :setProperty(MouseEvent.properties.mouseEventDeltaX, dx or 0)
+        :setProperty(MouseEvent.properties.mouseEventDeltaY, dy or 0)
+        :post()
+end
+
+local moveTimer -- holds the in-flight move's timer so it isn't garbage-collected
+
+local function moveWindowToSpace(direction)
+    local win = hs.window.focusedWindow()
+    if not win or moveTimer or not win:isStandard() or win:isFullScreen() then return end
+    local startSpace = (hs.spaces.windowSpaces(win) or {})[1]
+    local frame = win:frame()
+    -- Just up-left of the zoom button is title-bar drag area, even in Chrome's tab strip.
+    local zoom = win:zoomButtonRect()
+    local grab = zoom and { x = zoom.x - 1, y = zoom.y - 1 }
+        or { x = frame.x + 90, y = frame.y + 5 }
+    local cursor = hs.mouse.absolutePosition()
+    mouseEventNumber = mouseEventNumber + 1
+    local n = mouseEventNumber
+
+    MouseEvent.newMouseEvent(MouseTypes.mouseMoved, grab):rawFlags(0):post()
+    mouseEvent(MouseTypes.leftMouseDown, grab, n)
+    -- macOS 27 ignores a motionless hold, so nudge out and back: the window
+    -- counts as dragged but sits at its original spot during the animation.
+    for _, dx in ipairs({ 3, 3, 3, -3, -3, -3 }) do
+        hs.timer.usleep(15000)
+        grab.x = grab.x + dx
+        mouseEvent(MouseTypes.leftMouseDragged, grab, n, dx, 0)
+    end
+    switchSpace(direction)
+
+    -- Drop as soon as the window lands; give up after 1s (e.g. already at the last Space).
+    local deadline = hs.timer.secondsSinceEpoch() + 1
+    moveTimer = hs.timer.doEvery(0.02, function()
+        local space = (hs.spaces.windowSpaces(win) or {})[1]
+        if space == startSpace and hs.timer.secondsSinceEpoch() < deadline then return end
+        moveTimer:stop()
+        mouseEvent(MouseTypes.leftMouseUp, grab, n)
+        hs.mouse.absolutePosition(cursor)
+        win:focus()
+        -- Apps finish the drag after the drop and can land a few pixels off.
+        moveTimer = hs.timer.doAfter(0.15, function()
+            moveTimer = nil
+            if not win:frame():equals(frame) then win:setFrame(frame) end
+        end)
+    end)
+end
+
+local MOVE_MODS = { "ctrl", "alt", "shift" }
+hs.hotkey.bind(MOVE_MODS, "left", function() moveWindowToSpace("left") end)
+hs.hotkey.bind(MOVE_MODS, "right", function() moveWindowToSpace("right") end)
+
 hs.alert.show("Hammerspoon config loaded")
