@@ -8,11 +8,10 @@ hs.window.animationDuration = 0
 local APP_MAP = {
     [1] = "com.google.Chrome",
     [2] = "com.anthropic.claudefordesktop",
-    [3] = "com.todesktop.230313mzl4w4u92",
-    [4] = "com.microsoft.VSCode",
-    [5] = "com.tinyspeck.slackmacgap",
-    [6] = "com.mitchellh.ghostty",
-    [7] = "com.apple.finder",
+    [3] = "com.microsoft.VSCode",
+    [4] = "com.tinyspeck.slackmacgap",
+    [5] = "com.mitchellh.ghostty",
+    [6] = "com.apple.finder",
 }
 
 -- Apps where Cmd+N reliably opens a new window when none exist.
