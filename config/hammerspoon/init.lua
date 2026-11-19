@@ -192,4 +192,29 @@ local MOVE_MODS = { "ctrl", "alt", "shift" }
 hs.hotkey.bind(MOVE_MODS, "left", function() moveWindowToSpace("left") end)
 hs.hotkey.bind(MOVE_MODS, "right", function() moveWindowToSpace("right") end)
 
+-- Siri AI (the Cmd+Space search bar) restores its bar at absolute coordinates, which
+-- shift when the main display changes on dock/undock, so it can open off every screen.
+local SEARCH_BAR_KEYS = { "lastWindowPosition", "lastVisibleScreenRect", "userHasMovedWindow" }
+
+local function resetOffscreenSearchBar()
+    local saved = hs.execute("defaults read com.apple.campo lastWindowPosition")
+    local n = {}
+    for num in saved:gmatch("-?[%d.]+") do n[#n + 1] = tonumber(num) end
+    if #n ~= 4 then return end
+    -- Cocoa coordinates: origin at the main display's bottom-left, y up.
+    local top = hs.screen.primaryScreen():fullFrame().h - n[2] - n[4]
+    local center = hs.geometry.rect(n[1], top, n[3], n[4]).center
+    for _, screen in ipairs(hs.screen.allScreens()) do
+        if center:inside(screen:fullFrame()) then return end
+    end
+    for _, key in ipairs(SEARCH_BAR_KEYS) do
+        hs.execute("defaults delete com.apple.campo " .. key)
+    end
+    -- A signal, not a quit: launchd relaunches it only after an unsuccessful exit.
+    hs.execute("killall 'Siri AI'")
+end
+
+searchBarScreenWatcher = hs.screen.watcher.new(resetOffscreenSearchBar):start()
+resetOffscreenSearchBar()
+
 hs.alert.show("Hammerspoon config loaded")
