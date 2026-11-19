@@ -3,15 +3,14 @@ require("hs.ipc") -- enables the `hs` CLI (e.g. `hs -c "hs.reload()"`)
 
 hs.window.animationDuration = 0
 
--- Bundle IDs, not names: VS Code runs as "Code", so a name lookup misses it and
--- falls through to a slow launchOrFocus search.
+-- Bundle IDs, not names: a process name can differ from the app's name, and a missed
+-- lookup falls through to a slow launchOrFocus search.
 local APP_MAP = {
     [1] = "com.google.Chrome",
     [2] = "com.anthropic.claudefordesktop",
-    [3] = "com.microsoft.VSCode",
-    [4] = "com.tinyspeck.slackmacgap",
-    [5] = "com.mitchellh.ghostty",
-    [6] = "com.apple.finder",
+    [3] = "com.tinyspeck.slackmacgap",
+    [4] = "com.mitchellh.ghostty",
+    [5] = "com.apple.finder",
 }
 
 -- Apps where Cmd+N reliably opens a new window when none exist.
