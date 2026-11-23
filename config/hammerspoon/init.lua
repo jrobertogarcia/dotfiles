@@ -103,6 +103,11 @@ spaceScrollTap = hs.eventtap.new({ hs.eventtap.event.types.scrollWheel }, functi
     return true
 end):start()
 
+-- GNOME-style Super+PageUp/PageDown. On a laptop keyboard that's Option+fn+Up/Down.
+-- hs.spaces.gotoSpace is broken on macOS 27 (Hammerspoon issue #3897).
+hs.hotkey.bind({ "alt" }, "pageup", function() switchSpace("left") end)
+hs.hotkey.bind({ "alt" }, "pagedown", function() switchSpace("right") end)
+
 -- GNOME-style Super+arrows on Ctrl+Option (plain Option+arrows is word/paragraph nav):
 -- Left/Right snap to halves, Up maximizes, Down restores the pre-snap frame.
 local SNAP_MODS = { "ctrl", "alt" }
